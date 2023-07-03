@@ -65,12 +65,16 @@ client.once(Events.ClientReady, async () => {
 client.on(Events.MessageCreate, async message => {
 	if (!message.guild || message.guild.id !== config.source_guild_id) return;
 	if (simpleCopy[message.channelId]) {
-		simpleCopy[message.channelId].send(message.content);
+		simpleCopy[message.channelId].send(message.content).catch(() => {
+			console.log("Failed to send message to " + message.channelId);
+		});
 	}
 	if (filteredCopy[message.channelId]) {
 		for (let key in filteredCopy[message.channelId]) {
 			if (message.content.includes("    " + key.toUpperCase() + " [")) {
-				filteredCopy[message.channelId][key].send(message.content);
+				filteredCopy[message.channelId][key].send(message.content).catch(() => {
+					console.log("Failed to send message to " + key);
+				});
 			}
 		}
 	}
