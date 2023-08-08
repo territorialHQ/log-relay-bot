@@ -7,6 +7,8 @@ import {
 	TextChannel
 } from "discord.js";
 import {WebSocket} from "ws";
+import * as mysql from "mysql2";
+import {RowDataPacket} from "mysql2";
 
 const config: {
 	token: string,
@@ -19,11 +21,21 @@ const config: {
 	solo_target: Snowflake,
 	zombie_target: Snowflake,
 	filtered_data: { [key: string]: { guild_id: Snowflake, channel_id: Snowflake } },
-	websocket_secret: string
 	websocket_url: string[],
+	websocket_secret: string,
+	mysql_host: string,
+	mysql_user: string,
+	mysql_password: string,
+	mysql_database: string
 } = require("./config.json");
 
 const client = new Client({intents: [GatewayIntentBits.MessageContent, GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]});
+const db = mysql.createPool({
+	host: config.mysql_host,
+	user: config.mysql_user,
+	password: config.mysql_password,
+	database: config.mysql_database
+});
 
 let filteredCopy: { [key: Snowflake]: { [key: string]: TextChannel | NewsChannel } } = {};
 let simpleCopy: { [key: Snowflake]: TextChannel | NewsChannel } = {};
@@ -100,6 +112,31 @@ client.on(Events.MessageCreate, async message => {
 			}));
 		}
 	}
+
+	if (!mysqlInitialized || message.channelId !== config.clan_source) return;
+	let match = message.content.match(/^(\*?\*?)([\w\s]+)\s{4}(\d+)\s{4}([A-Z]+)\s\[(\d+)\.(\d+)->(\d+)\.(\d+)](\*?\*?)$/);
+	if (!match || match[1] !== match[9]) {
+		console.log("Failed to parse message: " + message.content);
+		return;
+	}
+	if (!mapNames[match[2]]) {
+		db.query("INSERT INTO map_ids (name) VALUES (?)", [match[2]], (err) => {
+			if (err) console.log(err);
+		});
+		mapNames[match[2]] = Object.keys(mapNames).length + 1;
+		mapIds[mapNames[match[2]]] = match[2];
+		console.log("Recognized new map: " + match[2]);
+	}
+	db.query("INSERT INTO clan_data (clan, points, is_contest, map, score_old, score_new) VALUES (?, ?, ?, ?, ?, ?)", [
+		match[4],
+		parseInt(match[3]),
+		match[1].length === 2,
+		mapNames[match[2]],
+		parseInt(match[5]) * 1000 + parseInt(match[6]),
+		parseInt(match[7]) * 1000 + parseInt(match[8])
+	], (err) => {
+		if (err) console.log(err);
+	});
 });
 
 client.login(config.token).then(() => console.log("Authenticated to Discord API!"));

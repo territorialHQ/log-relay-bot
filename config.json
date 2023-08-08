@@ -14,6 +14,10 @@
 	  "channel_id": "<channel id>"
 	}
   },
-  "websocket_secret": "<websocket secret here>"
   "websocket_url": ["<websocket origin here>"],
+  "websocket_secret": "<websocket secret here>",
+  "mysql_host": "<mysql host>",
+  "mysql_user": "<mysql user>",
+  "mysql_password": "<mysql password>",
+  "mysql_database": "<mysql database>"
 }

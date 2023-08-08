@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "dependencies": {
 	"discord.js": "^14.11.0",
-	"ws": "^8.13.0"
+	"ws": "^8.13.0",
+	"mysql2": "^3.6.0"
   }
 }
