@@ -114,7 +114,7 @@ client.on(Events.MessageCreate, async message => {
 	}
 
 	if (!mysqlInitialized || message.channelId !== config.clan_source) return;
-	let match = message.content.match(/^(\*?\*?)([\w\s]+)\s{4}(\d+)\s{4}(.+)\s\[(\d+)\.(\d+)->(\d+)\.(\d+)](\*?\*?)$/);
+	let match = message.content.match(/^(\*?\*?)([\w\s]+)\s{4}(\d+)\s{4}(.*)\s\[(\d+)\.(\d{3,4})->(\d+)\.(\d{3,4})](\*?\*?)$/);
 	if (!match || match[1] !== match[9]) {
 		console.log("Failed to parse message: " + message.content);
 		return;
@@ -132,8 +132,8 @@ client.on(Events.MessageCreate, async message => {
 		parseInt(match[3]),
 		match[1].length === 2,
 		mapNames[match[2]],
-		parseInt(match[5]) * 1000 + parseInt(match[6]),
-		parseInt(match[7]) * 1000 + parseInt(match[8])
+		parseInt(match[5]) * 10000 + parseInt(match[6]) * (match[6].length === 3 ? 10 : 1),
+		parseInt(match[7]) * 10000 + parseInt(match[8]) * (match[8].length === 3 ? 10 : 1)
 	], (err) => {
 		if (err) console.log(err);
 	});
