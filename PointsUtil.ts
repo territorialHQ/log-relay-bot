@@ -19,14 +19,27 @@ const config: {
 	solo_target: Snowflake,
 	zombie_target: Snowflake,
 	filtered_data: { [key: string]: { guild_id: Snowflake, channel_id: Snowflake } },
-	websocket_url: string,
 	websocket_secret: string
+	websocket_url: string[],
 } = require("./config.json");
 
 const client = new Client({intents: [GatewayIntentBits.MessageContent, GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]});
 
 let filteredCopy: { [key: Snowflake]: { [key: string]: TextChannel | NewsChannel } } = {};
 let simpleCopy: { [key: Snowflake]: TextChannel | NewsChannel } = {};
+
+let mapIds: { [key: number]: string } = {};
+let mapNames: { [key: string]: number } = {};
+let mysqlInitialized = false;
+db.query<MapIdRow[]>("SELECT * FROM map_ids", (err, results) => {
+	if (err) throw err;
+	for (let row of results) {
+		mapIds[row.id] = row.name;
+		mapNames[row.name] = row.id;
+	}
+	mysqlInitialized = true;
+});
+
 
 client.once(Events.ClientReady, async () => {
 	let a = client.guilds.cache.get(config.source_guild_id);
@@ -78,40 +91,54 @@ client.on(Events.MessageCreate, async message => {
 			}
 		}
 	}
-	if (websocket && websocket.readyState === 1) {
-		websocket.send(JSON.stringify({
-			typeId: message.channelId === config.clan_source ? 0 : message.channelId === config.solo_source ? 1 : 2,
-			data: message.content
-		}));
+	for (let i = 0; i < config.websocket_url.length; i++) {
+		let websocket = websockets[i];
+		if (websocket && websocket.readyState === 1) {
+			websocket.send(JSON.stringify({
+				typeId: message.channelId === config.clan_source ? 0 : message.channelId === config.solo_source ? 1 : 2,
+				data: message.content
+			}));
+		}
 	}
 });
 
 client.login(config.token).then(() => console.log("Authenticated to Discord API!"));
 
-let websocket: WebSocket|null;
-websocket = null;
+let websockets: (WebSocket | null)[] = [];
 
-function websocketOpenHook() {
+function websocketOpenHook(i: number) {
 	console.log("Connected to websocket!");
 	setTimeout(() => {
+		let websocket = websockets[i];
 		websocket && websocket.send(JSON.stringify({type: "verification", secret: config.websocket_secret}));
 	}, 1000);
 }
 
 let lastAttempt = 0;
-function attemptConnect() {
+
+function attemptConnect(i: number) {
+	let websocket = websockets[i];
 	if (websocket && websocket.readyState === 1) return;
 	if (Date.now() - lastAttempt < 5000) return;
 	lastAttempt = Date.now();
-	console.log("Attempting to connect to websocket...");
 	try {
-		websocket = new WebSocket(config.websocket_url);
-		websocket.onopen = websocketOpenHook;
-		websocket.onclose = () => setTimeout(attemptConnect, 5000);
-		websocket.onerror = () => setTimeout(attemptConnect, 5000);
+		let ws = new WebSocket(config.websocket_url[i]);
+		websockets[i] = ws;
+		ws.onopen = () => websocketOpenHook(i);
+		ws.onclose = () => setTimeout(attemptConnect, 5000);
+		ws.onerror = () => setTimeout(attemptConnect, 5000);
 	} catch (e) {
 		setTimeout(attemptConnect, 5000);
 	}
 }
 
-attemptConnect();
+for (let i = 0; i < config.websocket_url.length; i++) {
+	websockets.push(null);
+	attemptConnect(i);
+}
+
+
+interface MapIdRow extends RowDataPacket {
+	id: number,
+	name: string
+}
