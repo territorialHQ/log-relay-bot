@@ -114,7 +114,7 @@ client.on(Events.MessageCreate, async message => {
 	}
 
 	if (!mysqlInitialized || message.channelId !== config.clan_source) return;
-	let match = message.content.match(/^(\*?\*?)([\w\s]+)\s{4}(\d+)\s{4}([A-Z]+)\s\[(\d+)\.(\d+)->(\d+)\.(\d+)](\*?\*?)$/);
+	let match = message.content.match(/^(\*?\*?)([\w\s]+)\s{4}(\d+)\s{4}(.+)\s\[(\d+)\.(\d+)->(\d+)\.(\d+)](\*?\*?)$/);
 	if (!match || match[1] !== match[9]) {
 		console.log("Failed to parse message: " + message.content);
 		return;
