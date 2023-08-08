@@ -162,10 +162,10 @@ function attemptConnect(i: number) {
 		let ws = new WebSocket(config.websocket_url[i]);
 		websockets[i] = ws;
 		ws.onopen = () => websocketOpenHook(i);
-		ws.onclose = () => setTimeout(attemptConnect, 5000);
-		ws.onerror = () => setTimeout(attemptConnect, 5000);
+		ws.onclose = () => setTimeout(() => attemptConnect(i), 5000);
+		ws.onerror = () => setTimeout(() => attemptConnect(i), 5000);
 	} catch (e) {
-		setTimeout(attemptConnect, 5000);
+		setTimeout(() => attemptConnect(i), 5000);
 	}
 }
 
