@@ -4,10 +4,12 @@
   "clan_source": "<clan source channel id>",
   "solo_source": "<solo source channel id>",
   "zombie_source": "<zombie source channel id>",
+  "versus_source": "<versus source channel id>",
   "primary_guild_id": "<primary guild id>",
   "clan_target": "<clan target channel id>",
   "solo_target": "<solo target channel id>",
   "zombie_target": "<zombie target channel id>",
+  "versus_target": "<versus target channel id>",
   "filtered_data": {
 	"<clan tag>": {
 	  "guild_id": "<guild id>",
