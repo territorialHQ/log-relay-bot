@@ -151,13 +151,13 @@ function websocketOpenHook(i: number) {
 	}, 1000);
 }
 
-let lastAttempt = 0;
+let lastAttempt: number[] = [];
 
 function attemptConnect(i: number) {
 	let websocket = websockets[i];
 	if (websocket && websocket.readyState === 1) return;
-	if (Date.now() - lastAttempt < 5000) return;
-	lastAttempt = Date.now();
+	if (Date.now() - lastAttempt[i] < 5000) return;
+	lastAttempt[i] = Date.now();
 	try {
 		let ws = new WebSocket(config.websocket_url[i]);
 		websockets[i] = ws;
@@ -171,6 +171,7 @@ function attemptConnect(i: number) {
 
 for (let i = 0; i < config.websocket_url.length; i++) {
 	websockets.push(null);
+	lastAttempt.push(0);
 	attemptConnect(i);
 }
 
