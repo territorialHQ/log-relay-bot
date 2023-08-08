@@ -127,7 +127,7 @@ client.on(Events.MessageCreate, async message => {
 		mapIds[mapNames[match[2]]] = match[2];
 		console.log("Recognized new map: " + match[2]);
 	}
-	db.query("INSERT INTO clan_data (clan, points, is_contest, map, score_old, score_new) VALUES (?, ?, ?, ?, ?, ?)", [
+	db.query("INSERT INTO clan_data (clan, points, is_contest, map, score_old, score_new, timestamp) VALUES (?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())", [
 		match[4],
 		parseInt(match[3]),
 		match[1].length === 2,
